@@ -2,6 +2,7 @@ package ata.unit.three.project.expense.service.model;
 
 import ata.unit.three.project.expense.dynamodb.ExpenseItem;
 import ata.unit.three.project.expense.lambda.models.Expense;
+import dagger.Provides;
 
 import javax.inject.Inject;
 import java.time.Instant;
@@ -10,6 +11,7 @@ import java.util.UUID;
 
 public class ExpenseItemConverter {
     
+    @Inject
     public ExpenseItemConverter() {
 
     }

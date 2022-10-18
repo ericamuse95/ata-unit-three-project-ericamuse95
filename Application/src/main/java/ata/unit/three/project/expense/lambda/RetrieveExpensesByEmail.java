@@ -1,5 +1,10 @@
 package ata.unit.three.project.expense.lambda;
 
+import ata.unit.three.project.App;
+import ata.unit.three.project.expense.lambda.models.Expense;
+import ata.unit.three.project.expense.service.DaggerExpenseServiceComponent;
+import ata.unit.three.project.expense.service.ExpenseService;
+import ata.unit.three.project.expense.service.ExpenseServiceComponent;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -36,8 +41,24 @@ public class RetrieveExpensesByEmail
         String email = input.getQueryStringParameters().get("email");
 
         // Your Code Here
+//        ExpenseService expenseService = App.expenseService();
 
-        return response
-                .withStatusCode(200);
+        ExpenseServiceComponent dagger = DaggerExpenseServiceComponent.create();
+        ExpenseService expenseService = dagger.expenseService();
+
+
+        try{
+            String output = gson.toJson(expenseService.getExpensesByEmail(email));
+            log.info(email);
+
+            return response
+                    .withStatusCode(200)
+                    .withBody(output);
+        } catch (Exception e){
+            log.info(email);
+
+            return response
+                    .withStatusCode(400);
+        }
     }
 }

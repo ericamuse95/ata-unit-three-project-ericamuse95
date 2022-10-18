@@ -10,6 +10,7 @@ import ata.unit.three.project.expense.service.model.ExpenseItemConverter;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
@@ -45,6 +46,9 @@ public class ExpenseService {
     public String createExpense(Expense expense) {
         ExpenseItem expenseItem = expenseItemConverter.convert(expense);
         expenseServiceRepository.createExpense(expenseItem);
+        if (expense.getAmount() == null) {
+            throw new InvalidDataException("Amount is invalid");
+        }
         return expenseItem.getId();
     }
 
@@ -76,17 +80,82 @@ public class ExpenseService {
 
     public void addExpenseItemToList(String id, String expenseId) {
         // Your Code Here
+
+        if (expenseId == null) {
+            throw new ItemNotFoundException("Expense ID is null");
+        }
+
+        if (id == null) {
+            throw new ItemNotFoundException("Id is null");
+        }
+
+        ExpenseItem expenseItem = expenseServiceRepository.getExpenseById(expenseId);
+        ExpenseItemList expenseItemList = expenseServiceRepository.getExpenseListById(id);
+
+        if (expenseItem == null) {
+            throw new ItemNotFoundException("ExpenseItem is null");
+        }
+
+        if (expenseItemList == null) {
+            throw new ItemNotFoundException("ExpenseItemList is null");
+        }
+
+        if (!expenseItem.getEmail().equals(expenseItemList.getEmail())) {
+            throw new ItemNotFoundException("ExpenseItem email does not match ExpenseItemList email");
+        }
+
+        if (expenseItemList.getExpenseItems() != null && expenseItemList.getExpenseItems().contains(expenseItem)) {
+            throw new ItemNotFoundException("ExpenseItem is already in the list");
+        }
+
+        expenseServiceRepository.addExpenseItemToList(id, expenseItem);
     }
 
     public void removeExpenseItemFromList(String id, String expenseId) {
         // Your Code Here
+
+        if (expenseId == null) {
+            throw new ItemNotFoundException("expenseID null");
+        }
+
+        if (id == null) {
+            throw new ItemNotFoundException("id null");
+        }
+
+        ExpenseItem expenseItem = expenseServiceRepository.getExpenseById(expenseId);
+        ExpenseItemList expenseItemList = expenseServiceRepository.getExpenseListById(id);
+
+        if (expenseItem == null) {
+            throw new ItemNotFoundException("ExpenseItem is null");
+        }
+
+        if (expenseItemList == null) {
+            throw new ItemNotFoundException("ExpenseItemList is null");
+        }
+
+        if (!expenseItem.getEmail().equals(expenseItemList.getEmail())) {
+            throw new ItemNotFoundException("ExpenseItem email does not match ExpenseItemList email");
+        }
+
+        if (!expenseItemList.getExpenseItems().contains(expenseItem)) {
+            throw new ItemNotFoundException("ExpenseItem does not exist");
+        }
+
+        expenseServiceRepository.removeExpenseItemToList(id, expenseItem);
     }
 
     public List<ExpenseItemList> getExpenseListByEmail(String email) {
         if (StringUtils.isEmpty(email)) {
             throw new InvalidDataException("Email is not present");
         }
-        return expenseServiceRepository.getExpenseListsByEmail(email);
+        List <ExpenseItemList> expenseItemList = expenseServiceRepository.getExpenseListsByEmail(email);
+
+        for (ExpenseItemList itemList : expenseItemList) {
+            if (itemList.getExpenseItems() != null && itemList.getExpenseItems().size() > 0) {
+                Collections.sort(itemList.getExpenseItems(), new SortItems().reversed());
+            }
+        }
+        return expenseItemList;
     }
 
     private boolean isInvalidUuid(String uuid) {

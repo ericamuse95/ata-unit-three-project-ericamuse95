@@ -4,7 +4,7 @@ import ata.unit.three.project.App;
 import ata.unit.three.project.expense.lambda.models.Expense;
 import ata.unit.three.project.expense.service.ExpenseService;
 import ata.unit.three.project.expense.service.ExpenseServiceComponent;
-
+import ata.unit.three.project.expense.service.DaggerExpenseServiceComponent;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -28,17 +28,32 @@ public class CreateExpense implements RequestHandler<APIGatewayProxyRequestEvent
         // Logging the request json to make debugging easier.
         log.info(gson.toJson(input));
 
-        ExpenseService expenseService = App.expenseService();
+//        ExpenseService expenseService = App.expenseService();
+        ExpenseServiceComponent dagger = DaggerExpenseServiceComponent.create();
+        ExpenseService expenseService = dagger.expenseService();
 
         APIGatewayProxyResponseEvent response = new APIGatewayProxyResponseEvent();
-        
-        // Your Code Here
 
         Expense expense = gson.fromJson(input.getBody(), Expense.class);
-        expenseService.createExpense(expense);
+        //String output = gson.toJson(expenseService.createExpense(expense));
+        // Your Code Here
+        try{
+            String id = expenseService.createExpense(expense);
+            log.info(id);
 
-        return response
-                .withStatusCode(204);
+            return response
+                    .withStatusCode(200)
+                    .withBody(id);
+        } catch (Exception e){
+            log.info(expense);
+
+            return response
+                    .withStatusCode(400);
+        }
+
+//        return response
+//                .withStatusCode(200)
+//                .withBody(output);
 
     }
 }
